@@ -4,9 +4,36 @@ const Messages = {
   currentStyle: 'pink',
   _pollTimer: null,
 
+  // Predefined % positions mapped to Christmas tree tiers (viewBox 800x700)
+  STAR_POSITIONS: [
+    // Tier 5 (bottom, widest) — 6 positions
+    { x: 30, y: 70 }, { x: 37, y: 74 }, { x: 44, y: 77 },
+    { x: 56, y: 77 }, { x: 63, y: 74 }, { x: 70, y: 70 },
+    // Tier 4 — 5 positions
+    { x: 34, y: 58 }, { x: 42, y: 62 }, { x: 50, y: 65 },
+    { x: 58, y: 62 }, { x: 66, y: 58 },
+    // Tier 3 — 5 positions
+    { x: 36, y: 47 }, { x: 44, y: 51 }, { x: 50, y: 54 },
+    { x: 56, y: 51 }, { x: 64, y: 47 },
+    // Tier 2 — 4 positions
+    { x: 40, y: 37 }, { x: 47, y: 41 },
+    { x: 53, y: 41 }, { x: 60, y: 37 },
+    // Tier 1 (top) — 3 positions
+    { x: 44, y: 26 }, { x: 50, y: 30 }, { x: 56, y: 26 },
+  ],
+
+  STAR_EMOJI: {
+    pink: '💗', blue: '💙', lavender: '💜', peach: '🧡', mint: '💚'
+  },
+
+  STAR_MOOD: {
+    pink: '心动', blue: '想念', lavender: '温柔', peach: '甜蜜', mint: '期待'
+  },
+
   async init() {
     await this.load();
     this.bindComposeModal();
+    this.bindStarDetailModal();
     this.startPolling();
   },
 
@@ -19,77 +46,109 @@ const Messages = {
   },
 
   render() {
-    const container = document.getElementById('messages-list');
+    const layer = document.getElementById('stars-layer');
     const empty = document.getElementById('messages-empty');
+    const container = document.getElementById('star-tree-container');
 
     if (this.list.length === 0) {
-      container.innerHTML = '';
+      layer.innerHTML = '';
       empty.style.display = 'block';
+      if (container) container.style.minHeight = '300px';
       return;
     }
 
     empty.style.display = 'none';
-    container.innerHTML = this.list.map(m => this.cardHTML(m)).join('');
-    this.bindCardEvents();
+    if (container) container.style.minHeight = '550px';
+
+    const stars = this.list.map((m, i) => {
+      const pos = this.STAR_POSITIONS[i % this.STAR_POSITIONS.length];
+      return this.starHTML(m, pos, i);
+    }).join('');
+
+    layer.innerHTML = stars;
+    this.bindStarEvents();
   },
 
-  cardHTML(m) {
-    const isUnread = !m.read_at;
-    const authorName = m.author === 'boy' ? '男孩' : '棋文';
-    const time = new Date(m.created_at).toLocaleString('zh-CN', {
-      month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
-    });
+  starHTML(m, pos, index) {
+    const isRead = !!m.read_at;
+    const emoji = this.STAR_EMOJI[m.style] || '💗';
+    const delay = (index * 0.7) % 5;
 
     return `
-      <div class="envelope-card ${isUnread ? '' : 'opened'}" data-id="${m.id}" data-style="${m.style}">
-        <div class="envelope-flap"></div>
-        <div class="wax-seal">💝</div>
-        <div class="envelope-body">
-          ${isUnread ? '<div class="unread-badge"></div>' : ''}
-          <div class="card-author">From: ${authorName}</div>
-          <div class="card-text">${this.escapeHTML(m.content)}</div>
-          <div class="card-time">${time}</div>
-          ${!isUnread ? '<div class="card-read-label">✓ 已读</div>' : ''}
-          <button class="card-delete" data-action="delete" data-id="${m.id}">删除</button>
-        </div>
+      <div class="star-sticker ${isRead ? 'read' : 'unread'}"
+           data-id="${m.id}"
+           data-style="${m.style}"
+           data-read="${isRead}"
+           style="left:${pos.x}%;top:${pos.y}%;animation-delay:${delay}s">
+        <svg class="star-shape-svg" viewBox="0 0 40 40">
+          <polygon class="star-shape" points="20,2 25,15 39,15 28,24 32,38 20,29 8,38 12,24 1,15 15,15"/>
+          <polygon class="star-shape-inner" points="20,9 23,16 31,16 25,21 27,29 20,25 13,29 15,21 9,16 17,16"/>
+        </svg>
+        <span class="star-emoji-overlay">${emoji}</span>
       </div>`;
   },
 
-  bindCardEvents() {
-    document.querySelectorAll('.envelope-card').forEach(card => {
-      card.addEventListener('click', (e) => {
-        if (e.target.dataset.action === 'delete') {
-          e.stopPropagation();
-          this.doDelete(e.target.dataset.id);
-          return;
-        }
-        this.openCard(card);
+  bindStarEvents() {
+    document.querySelectorAll('.star-sticker').forEach(star => {
+      star.addEventListener('click', () => {
+        this.openStarDetail(star.dataset.id);
       });
     });
   },
 
-  async openCard(card) {
-    const id = card.dataset.id;
+  openStarDetail(id) {
     const msg = this.list.find(m => m.id === id);
-    if (!msg || msg.read_at) return;
+    if (!msg) return;
 
-    // Play open animation
-    card.classList.add('opening');
-    card.classList.remove('opened');
+    const modal = document.getElementById('star-detail-modal');
+    document.getElementById('star-detail-emoji').textContent = this.STAR_EMOJI[msg.style] || '💗';
+    document.getElementById('star-detail-author').textContent =
+      msg.author === 'boy' ? '👦 男孩' : '👧 棋文';
+    document.getElementById('star-detail-mood').textContent =
+      '心情：' + (this.STAR_MOOD[msg.style] || '心动');
+    document.getElementById('star-detail-content').textContent = msg.content;
+    document.getElementById('star-detail-time').textContent =
+      new Date(msg.created_at).toLocaleString('zh-CN', {
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
 
-    setTimeout(async () => {
-      card.classList.remove('opening');
-      card.classList.add('opened');
-      await API.markRead(id);
-      msg.read_at = new Date().toISOString();
-      this.render();
-    }, 500);
+    // Store current id for delete
+    modal.dataset.messageId = id;
+
+    modal.style.display = 'flex';
+
+    // Mark as read if unread
+    if (!msg.read_at) {
+      API.markRead(id).then(() => {
+        msg.read_at = new Date().toISOString();
+        this.render();
+      });
+    }
   },
 
-  async doDelete(id) {
-    if (!confirm('确定要删除这张纸条吗？')) return;
-    await API.deleteMessage(id);
-    await this.load();
+  bindStarDetailModal() {
+    const modal = document.getElementById('star-detail-modal');
+
+    document.getElementById('star-detail-close').addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    document.getElementById('star-detail-close-btn').addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.style.display = 'none';
+    });
+
+    document.getElementById('star-detail-delete').addEventListener('click', async () => {
+      const id = modal.dataset.messageId;
+      if (!id) return;
+      if (!confirm('确定要摘下这颗星星吗？')) return;
+      await API.deleteMessage(id);
+      modal.style.display = 'none';
+      await this.load();
+    });
   },
 
   bindComposeModal() {
@@ -98,7 +157,6 @@ const Messages = {
     const textarea = document.getElementById('msg-content');
     const charCount = document.getElementById('char-count');
 
-    // FAB opens compose modal when on messages tab
     fab.addEventListener('click', () => {
       if (!App || App.currentTab !== 'messages') return;
       modal.style.display = 'flex';
@@ -128,10 +186,10 @@ const Messages = {
       });
     });
 
-    // Style picker
-    modal.querySelectorAll('.swatch').forEach(btn => {
+    // Star type picker
+    modal.querySelectorAll('.star-type-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        modal.querySelectorAll('.swatch').forEach(b => b.classList.remove('active'));
+        modal.querySelectorAll('.star-type-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         this.currentStyle = btn.dataset.style;
       });
@@ -145,7 +203,7 @@ const Messages = {
     // Send
     document.getElementById('msg-send').addEventListener('click', async () => {
       const content = textarea.value.trim();
-      if (!content) return alert('请写下你想说的话~');
+      if (!content) return alert('请写下让你心动的那个瞬间~');
 
       const res = await API.createMessage(this.currentAuthor, content, this.currentStyle);
       if (!res.ok) return alert(res.error);
@@ -166,11 +224,5 @@ const Messages = {
         this.render();
       }
     }, 10000);
-  },
-
-  escapeHTML(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
   }
 };
