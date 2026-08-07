@@ -9,15 +9,22 @@ const PASSWORD = process.env.ACCESS_PASSWORD || 'ourlove123';
 const tokens = new Set();
 
 // Supabase client
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!supabaseUrl || !supabaseKey) {
+const supabaseUrl = (process.env.SUPABASE_URL || '').trim();
+const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+let supabase = null;
+
+if (supabaseUrl && supabaseKey) {
+  try {
+    supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
+    console.log('✓ Supabase client initialized');
+  } catch (err) {
+    console.error('✗ Supabase init failed:', err.message);
+  }
+} else {
   console.error('❌ 缺少 SUPABASE_URL 或 SUPABASE_SERVICE_ROLE_KEY 环境变量');
-  console.error('   请在 Railway 的 Variables 设置中添加这两个变量');
+  console.error('   SUPABASE_URL:', supabaseUrl ? 'set' : 'MISSING');
+  console.error('   SUPABASE_SERVICE_ROLE_KEY:', supabaseKey ? 'set' : 'MISSING');
 }
-const supabase = supabaseUrl && supabaseKey
-  ? createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } })
-  : null;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -181,7 +188,15 @@ app.delete('/api/markers/:id', async (req, res) => {
 });
 
 // ── Start ─────────────────────────────────────────────────────
+process.on('uncaughtException', (err) => {
+  console.error('FATAL:', err.message, err.stack);
+});
+process.on('unhandledRejection', (err) => {
+  console.error('REJECTION:', err.message, err.stack);
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`♡ 我们的小世界 running on port ${PORT}`);
   console.log(`   DB: ${supabase ? 'Supabase connected' : 'NOT CONFIGURED'}`);
+  console.log(`   Env keys: ${Object.keys(process.env).filter(k => k.startsWith('SUPABASE') || k.startsWith('ACCESS')).join(', ')}`);
 });
