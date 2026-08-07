@@ -1,12 +1,23 @@
 const express = require('express');
-const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const PASSWORD = process.env.ACCESS_PASSWORD || 'ourlove123';
 const tokens = new Set();
+
+// Supabase client
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ 缺少 SUPABASE_URL 或 SUPABASE_SERVICE_ROLE_KEY 环境变量');
+  console.error('   请在 Railway 的 Variables 设置中添加这两个变量');
+}
+const supabase = supabaseUrl && supabaseKey
+  ? createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } })
+  : null;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -20,33 +31,22 @@ function authMiddleware(req, res, next) {
   next();
 }
 
-// Apply auth to all /api/* except auth and health
 app.use('/api', (req, res, next) => {
   if (req.path === '/auth' || req.path === '/health') return next();
   authMiddleware(req, res, next);
 });
 
-// ── Data helpers ──────────────────────────────────────────────
-const DATA_DIR = path.join(__dirname, 'data');
-
-function ensureDataDir() {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-}
-
-function readData(filename) {
-  ensureDataDir();
-  const fp = path.join(DATA_DIR, filename);
-  if (!fs.existsSync(fp)) return [];
-  return JSON.parse(fs.readFileSync(fp, 'utf-8'));
-}
-
-function writeData(filename, data) {
-  ensureDataDir();
-  fs.writeFileSync(path.join(DATA_DIR, filename), JSON.stringify(data, null, 2), 'utf-8');
-}
-
+// ── Helpers ────────────────────────────────────────────────────
 function genId(prefix) {
   return `${prefix}_${Date.now()}_${crypto.randomBytes(2).toString('hex')}`;
+}
+
+function requireSupabase(res) {
+  if (!supabase) {
+    res.status(500).json({ ok: false, error: '数据库未配置，请在环境变量中设置 SUPABASE_URL 和 SUPABASE_SERVICE_ROLE_KEY' });
+    return false;
+  }
+  return true;
 }
 
 // ── Auth ──────────────────────────────────────────────────────
@@ -62,20 +62,25 @@ app.post('/api/auth', (req, res) => {
 
 // ── Health ────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, uptime: process.uptime() });
+  res.json({ ok: true, uptime: process.uptime(), db: !!supabase });
 });
 
 // ── Messages API ──────────────────────────────────────────────
 const VALID_AUTHORS = ['boy', 'girl'];
 const VALID_STYLES = ['pink', 'blue', 'lavender', 'peach', 'mint'];
 
-app.get('/api/messages', (_req, res) => {
-  const messages = readData('messages.json');
-  messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  res.json({ ok: true, data: messages });
+app.get('/api/messages', async (_req, res) => {
+  if (!requireSupabase(res)) return;
+  const { data, error } = await supabase
+    .from('messages')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ ok: false, error: error.message });
+  res.json({ ok: true, data });
 });
 
-app.post('/api/messages', (req, res) => {
+app.post('/api/messages', async (req, res) => {
+  if (!requireSupabase(res)) return;
   const { author, content, style } = req.body;
   if (!VALID_AUTHORS.includes(author)) {
     return res.status(400).json({ ok: false, error: 'author 必须是 boy 或 girl' });
@@ -91,43 +96,49 @@ app.post('/api/messages', (req, res) => {
     author,
     content: content.trim(),
     style,
-    createdAt: new Date().toISOString(),
-    readAt: null
+    created_at: new Date().toISOString(),
+    read_at: null
   };
-  const messages = readData('messages.json');
-  messages.push(msg);
-  writeData('messages.json', messages);
+  const { data, error } = await supabase.from('messages').insert(msg).select().single();
+  if (error) return res.status(500).json({ ok: false, error: error.message });
   res.status(201).json({ ok: true, data: msg });
 });
 
-app.put('/api/messages/:id', (req, res) => {
-  const messages = readData('messages.json');
-  const idx = messages.findIndex(m => m.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ ok: false, error: '留言不存在' });
-  messages[idx].readAt = req.body.readAt || new Date().toISOString();
-  writeData('messages.json', messages);
-  res.json({ ok: true, data: messages[idx] });
+app.put('/api/messages/:id', async (req, res) => {
+  if (!requireSupabase(res)) return;
+  const readAt = req.body.readAt || new Date().toISOString();
+  const { data, error } = await supabase
+    .from('messages')
+    .update({ read_at: readAt })
+    .eq('id', req.params.id)
+    .select()
+    .single();
+  if (error) return res.status(404).json({ ok: false, error: '留言不存在' });
+  res.json({ ok: true, data });
 });
 
-app.delete('/api/messages/:id', (req, res) => {
-  let messages = readData('messages.json');
-  const idx = messages.findIndex(m => m.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ ok: false, error: '留言不存在' });
-  messages.splice(idx, 1);
-  writeData('messages.json', messages);
+app.delete('/api/messages/:id', async (req, res) => {
+  if (!requireSupabase(res)) return;
+  const { error } = await supabase.from('messages').delete().eq('id', req.params.id);
+  if (error) return res.status(404).json({ ok: false, error: '留言不存在' });
   res.json({ ok: true, data: { deleted: true } });
 });
 
 // ── Markers API ───────────────────────────────────────────────
 const VALID_CATEGORIES = ['dating', 'travel', 'food', 'first_time'];
 
-app.get('/api/markers', (_req, res) => {
-  const markers = readData('markers.json');
-  markers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  res.json({ ok: true, data: markers });
+app.get('/api/markers', async (_req, res) => {
+  if (!requireSupabase(res)) return;
+  const { data, error } = await supabase
+    .from('markers')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ ok: false, error: error.message });
+  res.json({ ok: true, data });
 });
 
-app.post('/api/markers', (req, res) => {
+app.post('/api/markers', async (req, res) => {
+  if (!requireSupabase(res)) return;
   const { title, lat, lng, description, category, date } = req.body;
   if (!title || typeof title !== 'string' || title.trim().length === 0 || title.length > 100) {
     return res.status(400).json({ ok: false, error: 'title 长度需在 1-100 之间' });
@@ -155,24 +166,22 @@ app.post('/api/markers', (req, res) => {
     description: (description || '').trim(),
     category,
     date,
-    createdAt: new Date().toISOString()
+    created_at: new Date().toISOString()
   };
-  const markers = readData('markers.json');
-  markers.push(marker);
-  writeData('markers.json', markers);
+  const { data, error } = await supabase.from('markers').insert(marker).select().single();
+  if (error) return res.status(500).json({ ok: false, error: error.message });
   res.status(201).json({ ok: true, data: marker });
 });
 
-app.delete('/api/markers/:id', (req, res) => {
-  let markers = readData('markers.json');
-  const idx = markers.findIndex(m => m.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ ok: false, error: '标记不存在' });
-  markers.splice(idx, 1);
-  writeData('markers.json', markers);
+app.delete('/api/markers/:id', async (req, res) => {
+  if (!requireSupabase(res)) return;
+  const { error } = await supabase.from('markers').delete().eq('id', req.params.id);
+  if (error) return res.status(404).json({ ok: false, error: '标记不存在' });
   res.json({ ok: true, data: { deleted: true } });
 });
 
 // ── Start ─────────────────────────────────────────────────────
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`♡ 我们的小世界 running on port ${PORT}`);
+  console.log(`   DB: ${supabase ? 'Supabase connected' : 'NOT CONFIGURED'}`);
 });

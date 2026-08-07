@@ -34,9 +34,9 @@ const Messages = {
   },
 
   cardHTML(m) {
-    const isUnread = !m.readAt;
+    const isUnread = !m.read_at;
     const authorName = m.author === 'boy' ? '男孩' : '棋文';
-    const time = new Date(m.createdAt).toLocaleString('zh-CN', {
+    const time = new Date(m.created_at).toLocaleString('zh-CN', {
       month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
     });
 
@@ -71,7 +71,7 @@ const Messages = {
   async openCard(card) {
     const id = card.dataset.id;
     const msg = this.list.find(m => m.id === id);
-    if (!msg || msg.readAt) return;
+    if (!msg || msg.read_at) return;
 
     // Play open animation
     card.classList.add('opening');
@@ -81,7 +81,7 @@ const Messages = {
       card.classList.remove('opening');
       card.classList.add('opened');
       await API.markRead(id);
-      msg.readAt = new Date().toISOString();
+      msg.read_at = new Date().toISOString();
       this.render();
     }, 500);
   },
