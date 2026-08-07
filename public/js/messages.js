@@ -34,7 +34,7 @@ const Messages = {
 
   cardHTML(m) {
     const isUnread = !m.readAt;
-    const authorName = m.author === 'boy' ? '男孩' : '女孩';
+    const authorName = m.author === 'boy' ? '男孩' : '棋文';
     const time = new Date(m.createdAt).toLocaleString('zh-CN', {
       month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
     });
