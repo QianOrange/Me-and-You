@@ -1,0 +1,84 @@
+/* ── Map container ──────────────────────────────── */
+#map-container {
+  width: 100%;
+  height: 55vh;
+  min-height: 360px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+@media (min-width: 600px) {
+  #map-container { height: 60vh; }
+}
+
+/* ── Leaflet overrides ─────────────────────────── */
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+  font-family: inherit !important;
+}
+
+.leaflet-popup-content {
+  margin: 14px 18px !important;
+  font-size: 0.9rem !important;
+  line-height: 1.6 !important;
+}
+
+.leaflet-popup-content strong {
+  display: block;
+  font-size: 1rem;
+  color: var(--rose-dark);
+  margin-bottom: 2px;
+}
+
+.leaflet-popup-content .popup-category {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--rose-light);
+  color: var(--rose-dark);
+  margin-bottom: 6px;
+}
+
+.leaflet-popup-content .popup-date {
+  font-size: 0.75rem;
+  color: var(--mist);
+  margin-bottom: 6px;
+}
+
+.leaflet-popup-content .popup-desc {
+  color: var(--charcoal);
+  margin-bottom: 8px;
+}
+
+.popup-delete {
+  font-size: 0.72rem;
+  color: #e88;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: none;
+  border: 1px solid #e88;
+  transition: all 0.2s;
+}
+.popup-delete:hover {
+  background: #e88;
+  color: #fff;
+}
+
+/* ── Coord row ─────────────────────────────────── */
+.coord-row {
+  display: flex;
+  gap: 10px;
+}
+.coord-row input {
+  flex: 1;
+}
+
+.hint {
+  font-size: 0.73rem;
+  color: var(--mist);
+  margin-top: 6px;
+}

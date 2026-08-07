@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我们的小世界</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💕</text></svg>">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/messages.css">
+  <link rel="stylesheet" href="css/map.css">
+</head>
+<body>
+
+  <!-- Floating Petals -->
+  <div class="petals">
+    <span class="petal">🌸</span><span class="petal">💮</span><span class="petal">🌸</span>
+    <span class="petal">🌷</span><span class="petal">🌸</span><span class="petal">💮</span>
+    <span class="petal">🌸</span><span class="petal">🌷</span><span class="petal">🌸</span>
+    <span class="petal">💮</span>
+  </div>
+
+  <!-- Login Screen -->
+  <div class="login-overlay" id="login-screen">
+    <div class="login-card">
+      <div class="login-icon">💕</div>
+      <h2>我们的小世界</h2>
+      <p class="login-desc">属于两个人的秘密空间</p>
+      <input type="password" id="login-password" placeholder="输入密码" autocomplete="off">
+      <button class="btn btn-primary login-btn" id="login-btn">进入 ♡</button>
+      <p class="login-error" id="login-error"></p>
+    </div>
+  </div>
+
+  <div class="app" id="app-main" style="display:none">
+    <!-- Header -->
+    <header class="header">
+      <h1>♡ 我们的小世界 ♡</h1>
+      <p class="subtitle">记录属于我们的每一个瞬间</p>
+    </header>
+
+    <!-- Tab Bar -->
+    <nav class="tab-bar">
+      <button class="tab-btn active" data-tab="messages">
+        <span class="tab-icon">💌</span> 心情小纸条
+      </button>
+      <button class="tab-btn" data-tab="map">
+        <span class="tab-icon">🗺️</span> 我们的地图
+      </button>
+    </nav>
+
+    <!-- Messages Tab -->
+    <section class="tab-content active" id="tab-messages">
+      <div id="messages-list"></div>
+      <div id="messages-empty" class="empty-state">
+        <div class="icon">💌</div>
+        <p>还没有小纸条哦~</p>
+        <p>点击右下角 + 写下第一张纸条吧</p>
+      </div>
+    </section>
+
+    <!-- Map Tab -->
+    <section class="tab-content" id="tab-map">
+      <div id="map-container"></div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      Built with ♡ for two
+    </footer>
+  </div>
+
+  <!-- FAB -->
+  <button class="fab" id="fab-btn" title="添加">+</button>
+
+  <!-- Compose Message Modal -->
+  <div class="modal-overlay" id="message-modal" style="display:none">
+    <div class="modal">
+      <h3>✉️ 写一张小纸条</h3>
+      <div class="form-group">
+        <label>来自</label>
+        <div class="author-toggle">
+          <button class="author-option active" data-author="boy">👦 男孩</button>
+          <button class="author-option" data-author="girl">👧 女孩</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>信纸颜色</label>
+        <div class="style-picker">
+          <button class="swatch pink active" data-style="pink"></button>
+          <button class="swatch blue" data-style="blue"></button>
+          <button class="swatch lavender" data-style="lavender"></button>
+          <button class="swatch peach" data-style="peach"></button>
+          <button class="swatch mint" data-style="mint"></button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>内容</label>
+        <textarea id="msg-content" placeholder="写下你想说的话..." maxlength="500"></textarea>
+        <div class="char-count"><span id="char-count">0</span>/500</div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" id="msg-cancel">取消</button>
+        <button class="btn btn-primary" id="msg-send">发送 ♡</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Marker Modal -->
+  <div class="modal-overlay" id="marker-modal" style="display:none">
+    <div class="modal">
+      <h3>📍 标记一个地点</h3>
+      <div class="form-group">
+        <label>地点名称</label>
+        <input type="text" id="mk-title" placeholder="例如：第一次约会的地方" maxlength="100">
+      </div>
+      <div class="form-group">
+        <label>回忆描述</label>
+        <textarea id="mk-desc" placeholder="在这里发生了什么故事？" maxlength="300" style="min-height:70px"></textarea>
+      </div>
+      <div class="form-group">
+        <label>类别</label>
+        <select id="mk-category">
+          <option value="dating">💕 约会</option>
+          <option value="travel">✈️ 旅行</option>
+          <option value="food">🍽️ 美食</option>
+          <option value="first_time">✨ 第一次</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>日期</label>
+        <input type="date" id="mk-date">
+      </div>
+      <div class="form-group">
+        <label>搜索地点</label>
+        <div class="search-row">
+          <input type="text" id="mk-search" placeholder="输入地点名称自动查找，如：上海外滩" autocomplete="off">
+          <button class="btn btn-primary btn-sm" id="mk-search-btn">搜索</button>
+        </div>
+        <div id="mk-search-results" class="search-results"></div>
+      </div>
+      <div class="form-group">
+        <label>经纬度 <span class="label-hint">（搜索后自动填充）</span></label>
+        <div class="coord-row">
+          <input type="number" id="mk-lat" placeholder="纬度" step="any" min="-90" max="90" readonly>
+          <input type="number" id="mk-lng" placeholder="经度" step="any" min="-180" max="180" readonly>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" id="mk-cancel">取消</button>
+        <button class="btn btn-primary" id="mk-send">添加 ♡</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/messages.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

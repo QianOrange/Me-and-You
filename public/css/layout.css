@@ -1,0 +1,89 @@
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 16px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ────────────────────────────────────── */
+.header {
+  text-align: center;
+  padding: 28px 0 10px;
+}
+.header h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--rose-dark);
+  letter-spacing: 2px;
+}
+.header .subtitle {
+  font-size: 0.82rem;
+  color: var(--mist);
+  margin-top: 2px;
+}
+
+/* ── Tabs ──────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  background: #fff;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--mist);
+  transition: all 0.25s;
+  position: relative;
+}
+.tab-btn.active {
+  color: var(--rose-dark);
+  background: var(--rose-light);
+}
+.tab-btn .tab-icon {
+  margin-right: 6px;
+}
+
+/* ── Content area ──────────────────────────────── */
+.tab-content {
+  display: none;
+  flex: 1;
+  animation: fadeIn 0.3s;
+}
+.tab-content.active {
+  display: block;
+}
+
+/* ── Footer ────────────────────────────────────── */
+.footer {
+  text-align: center;
+  padding: 24px 0;
+  color: var(--mist);
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+
+/* ── Responsive ────────────────────────────────── */
+@media (max-width: 480px) {
+  .header h1 { font-size: 1.3rem; }
+  .header { padding: 18px 0 8px; }
+  .fab {
+    bottom: 20px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+  }
+  .modal {
+    padding: 22px;
+    width: 94%;
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "our-little-world",
+  "version": "1.0.0",
+  "description": "情侣互动网页 - 心情小纸条 + 我们的地图",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
