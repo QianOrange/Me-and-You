@@ -1,6 +1,12 @@
 const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
+
+// 为 Node.js 环境提供 WebSocket 支持（Supabase realtime-js 需要）
+if (typeof globalThis.WebSocket === 'undefined') {
+  try { globalThis.WebSocket = require('ws'); } catch (_) {}
+}
+
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
