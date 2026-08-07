@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/messages.css">
   <link rel="stylesheet" href="css/map.css">
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 </head>
 <body>
 
@@ -58,128 +59,7 @@
     <!-- Messages Tab -->
     <section class="tab-content active" id="tab-messages">
       <div id="star-tree-container">
-        <svg id="star-tree-svg" viewBox="0 0 800 700" preserveAspectRatio="xMidYMid meet">
-          <defs>
-            <linearGradient id="trunkGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="#4E342E"/>
-              <stop offset="30%" stop-color="#6D4C41"/>
-              <stop offset="70%" stop-color="#5D4037"/>
-              <stop offset="100%" stop-color="#3E2723"/>
-            </linearGradient>
-            <linearGradient id="tier5Grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#388E3C"/>
-              <stop offset="100%" stop-color="#1B5E20"/>
-            </linearGradient>
-            <linearGradient id="tier4Grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#43A047"/>
-              <stop offset="100%" stop-color="#2E7D32"/>
-            </linearGradient>
-            <linearGradient id="tier3Grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#4CAF50"/>
-              <stop offset="100%" stop-color="#388E3C"/>
-            </linearGradient>
-            <linearGradient id="tier2Grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#66BB6A"/>
-              <stop offset="100%" stop-color="#43A047"/>
-            </linearGradient>
-            <linearGradient id="tier1Grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#81C784"/>
-              <stop offset="100%" stop-color="#4CAF50"/>
-            </linearGradient>
-            <radialGradient id="treeGlow" cx="50%" cy="40%" r="45%">
-              <stop offset="0%" stop-color="rgba(255,240,180,0.18)"/>
-              <stop offset="100%" stop-color="rgba(255,240,180,0)"/>
-            </radialGradient>
-            <filter id="starGlow">
-              <feGaussianBlur stdDeviation="2" result="blur"/>
-              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-            <filter id="softShadow">
-              <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity="0.15"/>
-            </filter>
-          </defs>
-
-          <!-- Background glow -->
-          <rect width="800" height="700" fill="transparent"/>
-          <ellipse cx="400" cy="280" rx="340" ry="300" fill="url(#treeGlow)"/>
-
-          <!-- Tier 5 (bottom, widest) - painted first, behind others -->
-          <g filter="url(#softShadow)">
-            <polygon points="400,230 100,570 700,570" fill="url(#tier5Grad)" stroke="#1B5E20" stroke-width="1.5"/>
-            <!-- Tier 5 wavy bottom edge -->
-            <path d="M100,570 Q160,550 220,565 Q280,580 340,560 Q400,540 460,560 Q520,580 580,565 Q640,550 700,570"
-                  fill="none" stroke="#2E7D32" stroke-width="2" opacity="0.8"/>
-          </g>
-
-          <!-- Tier 4 -->
-          <g filter="url(#softShadow)">
-            <polygon points="400,180 160,470 640,470" fill="url(#tier4Grad)" stroke="#1B5E20" stroke-width="1.5"/>
-            <path d="M160,470 Q220,450 280,465 Q340,480 400,458 Q460,480 520,465 Q580,450 640,470"
-                  fill="none" stroke="#388E3C" stroke-width="2" opacity="0.8"/>
-          </g>
-
-          <!-- Tier 3 -->
-          <g filter="url(#softShadow)">
-            <polygon points="400,130 210,370 590,370" fill="url(#tier3Grad)" stroke="#1B5E20" stroke-width="1.5"/>
-            <path d="M210,370 Q260,352 310,365 Q360,378 400,358 Q440,378 490,365 Q540,352 590,370"
-                  fill="none" stroke="#43A047" stroke-width="2" opacity="0.8"/>
-          </g>
-
-          <!-- Tier 2 -->
-          <g filter="url(#softShadow)">
-            <polygon points="400,85 265,275 535,275" fill="url(#tier2Grad)" stroke="#1B5E20" stroke-width="1.5"/>
-            <path d="M265,275 Q305,260 340,270 Q375,280 400,265 Q425,280 460,270 Q495,260 535,275"
-                  fill="none" stroke="#4CAF50" stroke-width="2" opacity="0.8"/>
-          </g>
-
-          <!-- Tier 1 (top, smallest) -->
-          <g filter="url(#softShadow)">
-            <polygon points="400,50 320,185 480,185" fill="url(#tier1Grad)" stroke="#1B5E20" stroke-width="1.5"/>
-            <path d="M320,185 Q345,172 370,180 Q395,188 400,178 Q405,188 430,180 Q455,172 480,185"
-                  fill="none" stroke="#66BB6A" stroke-width="1.5" opacity="0.8"/>
-          </g>
-
-          <!-- Golden tree-top star -->
-          <g filter="url(#starGlow)">
-            <polygon points="400,2 407,28 434,28 412,44 420,70 400,55 380,70 388,44 366,28 393,28"
-                     fill="#FFD700" stroke="#FFA000" stroke-width="1.5"/>
-            <circle cx="400" cy="35" r="8" fill="#FFF9C4" opacity="0.6"/>
-          </g>
-
-          <!-- Trunk -->
-          <rect x="360" y="565" width="80" height="135" rx="6" fill="url(#trunkGrad)" filter="url(#softShadow)"/>
-          <!-- Trunk wood lines -->
-          <line x1="375" y1="575" x2="375" y2="695" stroke="#3E2723" stroke-width="1" opacity="0.4"/>
-          <line x1="400" y1="570" x2="400" y2="698" stroke="#3E2723" stroke-width="1" opacity="0.3"/>
-          <line x1="425" y1="575" x2="425" y2="695" stroke="#3E2723" stroke-width="1" opacity="0.4"/>
-
-          <!-- Decorative lights scattered on tree -->
-          <circle cx="180" cy="540" r="4" fill="#FFEB3B" opacity="0.8"><animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite"/></circle>
-          <circle cx="250" cy="500" r="4" fill="#FF5252" opacity="0.8"><animate attributeName="opacity" values="0.8;0.3;0.8" dur="2.3s" repeatCount="indefinite"/></circle>
-          <circle cx="300" cy="450" r="4" fill="#40C4FF" opacity="0.8"><animate attributeName="opacity" values="0.8;0.3;0.8" dur="1.8s" repeatCount="indefinite"/></circle>
-          <circle cx="350" cy="380" r="4" fill="#FFEB3B" opacity="0.8"><animate attributeName="opacity" values="0.8;0.3;0.8" dur="2.5s" repeatCount="indefinite"/></circle>
-          <circle cx="500" cy="450" r="4" fill="#FF5252" opacity="0.8"><animate attributeName="opacity" values="0.8;0.3;0.8" dur="2.1s" repeatCount="indefinite"/></circle>
-          <circle cx="550" cy="500" r="4" fill="#40C4FF" opacity="0.8"><animate attributeName="opacity" values="0.8;0.3;0.8" dur="1.9s" repeatCount="indefinite"/></circle>
-          <circle cx="620" cy="540" r="4" fill="#FFEB3B" opacity="0.8"><animate attributeName="opacity" values="0.8;0.3;0.8" dur="2.7s" repeatCount="indefinite"/></circle>
-          <circle cx="220" cy="420" r="3.5" fill="#E040FB" opacity="0.7"><animate attributeName="opacity" values="0.7;0.2;0.7" dur="2.2s" repeatCount="indefinite"/></circle>
-          <circle cx="580" cy="420" r="3.5" fill="#E040FB" opacity="0.7"><animate attributeName="opacity" values="0.7;0.2;0.7" dur="2.4s" repeatCount="indefinite"/></circle>
-          <circle cx="280" cy="350" r="3.5" fill="#FFAB40" opacity="0.7"><animate attributeName="opacity" values="0.7;0.2;0.7" dur="1.7s" repeatCount="indefinite"/></circle>
-          <circle cx="520" cy="350" r="3.5" fill="#FFAB40" opacity="0.7"><animate attributeName="opacity" values="0.7;0.2;0.7" dur="2.6s" repeatCount="indefinite"/></circle>
-          <circle cx="330" cy="290" r="3" fill="#FF5252" opacity="0.7"><animate attributeName="opacity" values="0.7;0.2;0.7" dur="2.0s" repeatCount="indefinite"/></circle>
-          <circle cx="470" cy="290" r="3" fill="#40C4FF" opacity="0.7"><animate attributeName="opacity" values="0.7;0.2;0.7" dur="2.8s" repeatCount="indefinite"/></circle>
-          <circle cx="370" cy="220" r="3" fill="#FFEB3B" opacity="0.7"><animate attributeName="opacity" values="0.7;0.2;0.7" dur="1.6s" repeatCount="indefinite"/></circle>
-          <circle cx="430" cy="220" r="3" fill="#E040FB" opacity="0.7"><animate attributeName="opacity" values="0.7;0.2;0.7" dur="2.3s" repeatCount="indefinite"/></circle>
-
-          <!-- Garland / tinsel swoops -->
-          <path d="M160,500 Q280,530 400,510 Q520,490 640,500" fill="none" stroke="rgba(255,215,0,0.25)" stroke-width="2"/>
-          <path d="M210,400 Q310,425 400,410 Q490,395 590,400" fill="none" stroke="rgba(255,215,0,0.25)" stroke-width="2"/>
-          <path d="M265,300 Q340,320 400,310 Q460,300 535,300" fill="none" stroke="rgba(255,215,0,0.25)" stroke-width="2"/>
-          <path d="M320,210 Q365,225 400,218 Q435,211 480,210" fill="none" stroke="rgba(255,215,0,0.25)" stroke-width="1.5"/>
-
-          <!-- Snow ground -->
-          <ellipse cx="400" cy="700" rx="180" ry="20" fill="#FFF" opacity="0.5"/>
-        </svg>
-        <div id="stars-layer"></div>
+        <div id="tree-canvas"></div>
       </div>
       <div id="messages-empty" class="empty-state">
         <div class="icon">🌟</div>
@@ -301,6 +181,7 @@
   <script src="assets/leaflet.js"></script>
   <script src="js/background.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/startree3d.js"></script>
   <script src="js/messages.js"></script>
   <script src="js/map.js"></script>
   <script src="js/app.js"></script>
