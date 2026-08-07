@@ -173,6 +173,6 @@ app.delete('/api/markers/:id', (req, res) => {
 });
 
 // ── Start ─────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`♡ 我们的小世界 running at http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`♡ 我们的小世界 running on port ${PORT}`);
 });
