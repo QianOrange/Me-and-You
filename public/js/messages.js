@@ -2,6 +2,7 @@ const Messages = {
   list: [],
   currentAuthor: 'boy',
   currentStyle: 'pink',
+  _pollTimer: null,
 
   async init() {
     await this.load();
@@ -157,7 +158,8 @@ const Messages = {
   },
 
   startPolling() {
-    setInterval(async () => {
+    if (this._pollTimer) clearInterval(this._pollTimer);
+    this._pollTimer = setInterval(async () => {
       const res = await API.getMessages();
       if (res.ok && res.data.length !== this.list.length) {
         this.list = res.data;

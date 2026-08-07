@@ -2,6 +2,7 @@ const MapApp = {
   map: null,
   markers: [],
   layerGroup: null,
+  _pollTimer: null,
   defaultCenter: [35.86, 104.19],
   defaultZoom: 6,
 
@@ -13,6 +14,12 @@ const MapApp = {
   },
 
   init() {
+    if (this._pollTimer) clearInterval(this._pollTimer);
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
+
     this.map = L.map('map-container').setView(this.defaultCenter, this.defaultZoom);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -208,7 +215,8 @@ const MapApp = {
   },
 
   startPolling() {
-    setInterval(async () => {
+    if (this._pollTimer) clearInterval(this._pollTimer);
+    this._pollTimer = setInterval(async () => {
       const res = await API.getMarkers();
       if (res.ok && res.data.length !== this.markers.length) {
         this.markers = res.data;

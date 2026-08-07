@@ -1,12 +1,14 @@
 const App = {
   currentTab: 'messages',
+  _started: false,
 
   init() {
-    // Check login status
+    // Always bind login handler so it works on both fresh and stale-token paths
+    this.bindLogin();
+
     if (!API.loadToken()) {
       document.getElementById('login-screen').style.display = 'flex';
       document.getElementById('app-main').style.display = 'none';
-      this.bindLogin();
       return;
     }
     this.startApp();
@@ -33,6 +35,7 @@ const App = {
           API.setToken(res.data.token);
           document.getElementById('login-screen').style.display = 'none';
           document.getElementById('app-main').style.display = '';
+          this._started = false;
           this.startApp();
           return;
         }
@@ -51,6 +54,9 @@ const App = {
   },
 
   startApp() {
+    if (this._started) return;
+    this._started = true;
+
     // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
