@@ -22,7 +22,6 @@ const MapApp = {
 
     this.layerGroup = L.layerGroup().addTo(this.map);
 
-    // Click on map to get coordinates (for manual entry fallback)
     this.map.on('click', (e) => {
       const lat = e.latlng.lat.toFixed(6);
       const lng = e.latlng.lng.toFixed(6);
@@ -39,10 +38,10 @@ const MapApp = {
     const res = await API.getMarkers();
     if (!res.ok) return;
     this.markers = res.data;
-    this.render();
+    this.render(true);
   },
 
-  render() {
+  render(fitBounds) {
     this.layerGroup.clearLayers();
     const bounds = [];
 
@@ -53,8 +52,8 @@ const MapApp = {
       bounds.push([m.lat, m.lng]);
     });
 
-    if (bounds.length > 0) {
-      this.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+    if (fitBounds && bounds.length > 0) {
+      this.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
     }
   },
 
@@ -122,10 +121,8 @@ const MapApp = {
         const lng = parseFloat(item.dataset.lng);
         document.getElementById('mk-lat').value = lat.toFixed(6);
         document.getElementById('mk-lng').value = lng.toFixed(6);
-        // Highlight selected
         document.querySelectorAll('.search-result-item').forEach(i => i.classList.remove('selected'));
         item.classList.add('selected');
-        // Also center map on the selected location
         this.map.setView([lat, lng], 14);
       });
     });
@@ -143,7 +140,6 @@ const MapApp = {
       modal.style.display = 'flex';
     });
 
-    // Search
     let searchTimer;
     searchInput.addEventListener('input', () => {
       clearTimeout(searchTimer);
@@ -190,7 +186,13 @@ const MapApp = {
 
       modal.style.display = 'none';
       this.clearMarkerForm();
-      await this.load();
+
+      // Add to local array and re-render without resetting zoom
+      this.markers.unshift(res.data);
+      this.render(false);
+
+      // Smoothly fly to the new marker
+      this.map.flyTo([lat, lng], 14, { duration: 1 });
     });
   },
 
@@ -210,7 +212,7 @@ const MapApp = {
       const res = await API.getMarkers();
       if (res.ok && res.data.length !== this.markers.length) {
         this.markers = res.data;
-        this.render();
+        this.render(false);
       }
     }, 10000);
   },
